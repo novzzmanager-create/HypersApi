@@ -1,4 +1,4 @@
-package moe.shizuku.server;
+package com.hypers.server;
 
 interface IRemoteProcess {
 
