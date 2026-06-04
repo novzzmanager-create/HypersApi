@@ -2,7 +2,7 @@ package com.hypers.server;
 
 import com.hypers.server.IRemoteProcess;
 import com.hypers.server.IShizukuApplication;
-import com.hypers.server.IShizukuServiceConnection;
+import com.hypers.server.IHypersServiceConnection;
 
 interface IHypersService {
 
@@ -20,9 +20,9 @@ interface IHypersService {
 
     void setSystemProperty(in String name, in String value) = 10;
 
-    int addUserService(in IShizukuServiceConnection conn, in Bundle args) = 11;
+    int addUserService(in IHypersServiceConnection conn, in Bundle args) = 11;
 
-    int removeUserService(in IShizukuServiceConnection conn, in Bundle args) = 12;
+    int removeUserService(in IHypersServiceConnection conn, in Bundle args) = 12;
 
     void requestPermission(int requestCode) = 14;
 
@@ -30,7 +30,7 @@ interface IHypersService {
 
     boolean shouldShowRequestPermissionRationale() = 16;
 
-    void attachApplication(in IShizukuApplication application,in Bundle args) = 17;
+    void attachApplication(in IHypersApplication application,in Bundle args) = 17;
 
     void exit() = 100;
 
