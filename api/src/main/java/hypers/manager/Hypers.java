@@ -1,15 +1,15 @@
 package hypers.manager;
 
 import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP_PREFIX;
-import static hypers.manager.ShizukuApiConstants.ATTACH_APPLICATION_API_VERSION;
-import static hypers.manager.ShizukuApiConstants.ATTACH_APPLICATION_PACKAGE_NAME;
-import static hypers.manager.ShizukuApiConstants.BIND_APPLICATION_PERMISSION_GRANTED;
-import static hypers.manager.ShizukuApiConstants.BIND_APPLICATION_SERVER_PATCH_VERSION;
-import static hypers.manager.ShizukuApiConstants.BIND_APPLICATION_SERVER_SECONTEXT;
-import static hypers.manager.ShizukuApiConstants.BIND_APPLICATION_SERVER_UID;
-import static hypers.manager.ShizukuApiConstants.BIND_APPLICATION_SERVER_VERSION;
-import static hypers.manager.ShizukuApiConstants.BIND_APPLICATION_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE;
-import static hypers.manager.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
+import static hypers.manager.HypersApiConstants.ATTACH_APPLICATION_API_VERSION;
+import static hypers.manager.HypersApiConstants.ATTACH_APPLICATION_PACKAGE_NAME;
+import static hypers.manager.HypersApiConstants.BIND_APPLICATION_PERMISSION_GRANTED;
+import static hypers.manager.HypersApiConstants.BIND_APPLICATION_SERVER_PATCH_VERSION;
+import static hypers.manager.HypersApiConstants.BIND_APPLICATION_SERVER_SECONTEXT;
+import static hypers.manager.HypersApiConstants.BIND_APPLICATION_SERVER_UID;
+import static hypers.manager.HypersApiConstants.BIND_APPLICATION_SERVER_VERSION;
+import static hypers.manager.HypersApiConstants.BIND_APPLICATION_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE;
+import static hypers.manager.HypersApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
 
 import android.content.ComponentName;
 import android.content.ServiceConnection;
@@ -30,13 +30,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import moe.shizuku.server.IShizukuApplication;
-import moe.shizuku.server.IShizukuService;
+import com.hypers.server.IHypersApplication;
+import com.hypers.server.IHypersService;
 
-public class Shizuku {
+public class Hypers {
 
     private static IBinder binder;
-    private static IShizukuService service;
+    private static IHypersService service;
 
     private static int serverUid = -1;
     private static int serverApiVersion = -1;
@@ -47,7 +47,7 @@ public class Shizuku {
     private static boolean preV11 = false;
     private static boolean binderReady = false;
 
-    private static final IShizukuApplication SHIZUKU_APPLICATION = new IShizukuApplication.Stub() {
+    private static final IHypersApplication HYPERS_APPLICATION = new IHypersApplication.Stub() {
 
         @Override
         public void bindApplication(Bundle data) {
@@ -82,17 +82,17 @@ public class Shizuku {
         boolean result;
 
         Bundle args = new Bundle();
-        args.putInt(ATTACH_APPLICATION_API_VERSION, ShizukuApiConstants.SERVER_VERSION);
+        args.putInt(ATTACH_APPLICATION_API_VERSION, HypersApiConstants.SERVER_VERSION);
         args.putString(ATTACH_APPLICATION_PACKAGE_NAME, packageName);
 
         Parcel data = Parcel.obtain();
         Parcel reply = Parcel.obtain();
         try {
-            data.writeInterfaceToken("moe.shizuku.server.IShizukuService");
-            data.writeStrongBinder(SHIZUKU_APPLICATION.asBinder());
+            data.writeInterfaceToken("com.hypers.server.IHypersService");
+            data.writeStrongBinder(HYPERS_APPLICATION.asBinder());
             data.writeInt(1);
             args.writeToParcel(data, 0);
-            result = binder.transact(18 /*IShizukuService.Stub.TRANSACTION_attachApplication*/, data, reply, 0);
+            result = binder.transact(18 /*IHypersService.Stub.TRANSACTION_attachApplication*/, data, reply, 0);
             reply.readException();
         } finally {
             reply.recycle();
@@ -108,10 +108,10 @@ public class Shizuku {
         Parcel data = Parcel.obtain();
         Parcel reply = Parcel.obtain();
         try {
-            data.writeInterfaceToken("moe.shizuku.server.IShizukuService");
-            data.writeStrongBinder(SHIZUKU_APPLICATION.asBinder());
+            data.writeInterfaceToken("com.hypers.server.IHypersService");
+            data.writeStrongBinder(HYPERS_APPLICATION.asBinder());
             data.writeString(packageName);
-            result = binder.transact(14 /*IShizukuService.Stub.TRANSACTION_attachApplication*/, data, reply, 0);
+            result = binder.transact(14 /*IHypersService.Stub.TRANSACTION_attachApplication*/, data, reply, 0);
             reply.readException();
         } finally {
             reply.recycle();
@@ -138,21 +138,21 @@ public class Shizuku {
                 binder.unlinkToDeath(DEATH_RECIPIENT, 0);
             }
             binder = newBinder;
-            service = IShizukuService.Stub.asInterface(newBinder);
+            service = IHypersService.Stub.asInterface(newBinder);
 
             try {
                 binder.linkToDeath(DEATH_RECIPIENT, 0);
             } catch (Throwable e) {
-                Log.i("ShizukuApplication", "attachApplication");
+                Log.i("HypersApplication", "attachApplication");
             }
 
             try {
                 if (!attachApplicationV13(binder, packageName) && !attachApplicationV11(binder, packageName)) {
                     preV11 = true;
                 }
-                Log.i("ShizukuApplication", "attachApplication");
+                Log.i("HypersApplication", "attachApplication");
             } catch (Throwable e) {
-                Log.w("ShizukuApplication", Log.getStackTraceString(e));
+                Log.w("HypersApplication", Log.getStackTraceString(e));
             }
 
             if (preV11) {
@@ -214,13 +214,13 @@ public class Shizuku {
     /**
      * Add a listener that will be called when binder is received.
      * <p>
-     * Shizuku APIs can only be used when the binder is received, or a
+     * Hypers APIs can only be used when the binder is received, or a
      * {@link IllegalStateException} will be thrown.
      *
      * <p>Note:</p>
      * <ul>
      * <li>The listener will be called in main thread.</li>
-     * <li>The listener could be called multiply times. For example, user restarts Shizuku when app is running.</li>
+     * <li>The listener could be called multiply times. For example, user restarts Hypers when app is running.</li>
      * </ul>
      * <p>
      *
@@ -233,12 +233,12 @@ public class Shizuku {
     /**
      * Add a listener that will be called when binder is received.
      * <p>
-     * Shizuku APIs can only be used when the binder is received, or a
+     * Hypers APIs can only be used when the binder is received, or a
      * {@link IllegalStateException} will be thrown.
      *
      * <p>Note:</p>
      * <ul>
-     * <li>The listener could be called multiply times. For example, user restarts Shizuku when app is running.</li>
+     * <li>The listener could be called multiply times. For example, user restarts Hypers when app is running.</li>
      * </ul>
      * <p>
      *
@@ -425,7 +425,7 @@ public class Shizuku {
     }
 
     @NonNull
-    protected static IShizukuService requireService() {
+    protected static IHypersService requireService() {
         if (service == null) {
             throw new IllegalStateException("binder haven't been received");
         }
@@ -462,13 +462,13 @@ public class Shizuku {
     /**
      * Call {@link IBinder#transact(int, Parcel, Parcel, int)} at remote service.
      * <p>
-     * Use {@link ShizukuBinderWrapper} to wrap the original binder.
+     * Use {@link HypersBinderWrapper} to wrap the original binder.
      *
-     * @see ShizukuBinderWrapper
+     * @see HypersBinderWrapper
      */
     public static void transactRemote(@NonNull Parcel data, @Nullable Parcel reply, int flags) {
         try {
-            requireService().asBinder().transact(ShizukuApiConstants.BINDER_TRANSACTION_transact, data, reply, flags);
+            requireService().asBinder().transact(HypersApiConstants.BINDER_TRANSACTION_transact, data, reply, flags);
         } catch (RemoteException e) {
             throw rethrowAsRuntimeException(e);
         }
@@ -477,20 +477,20 @@ public class Shizuku {
     /**
      * Start a new process at remote service, parameters are passed to {@link Runtime#exec(String, String[], java.io.File)}.
      * <br>From version 11, like "su", the process will be killed when the caller process is dead. If you have complicated
-     * requirements, use {@link Shizuku#bindUserService(UserServiceArgs, ServiceConnection)}.
+     * requirements, use {@link Hypers#bindUserService(UserServiceArgs, ServiceConnection)}.
      * <p>
      * Note, you may need to read/write streams from RemoteProcess in different threads.
      * </p>
      *
      * @return RemoteProcess holds the binder of remote process
      * @deprecated This method should only be used when you are transitioning from "su".
-     * Use {@link Shizuku#transactRemote(Parcel, Parcel, int)} for binder calls and {@link Shizuku#bindUserService(UserServiceArgs, ServiceConnection)}
+     * Use {@link Hypers#transactRemote(Parcel, Parcel, int)} for binder calls and {@link Hypers#bindUserService(UserServiceArgs, ServiceConnection)}
      * for complicated requirements.
-     * <p>This method is planned to be removed from Shizuku API 14.
+     * <p>This method is planned to be removed from Hypers API 14.
      */
-    private static ShizukuRemoteProcess newProcess(@NonNull String[] cmd, @Nullable String[] env, @Nullable String dir) {
+    private static HypersRemoteProcess newProcess(@NonNull String[] cmd, @Nullable String[] env, @Nullable String dir) {
         try {
-            return new ShizukuRemoteProcess(requireService().newProcess(cmd, env, dir));
+            return new HypersRemoteProcess(requireService().newProcess(cmd, env, dir));
         } catch (RemoteException e) {
             throw rethrowAsRuntimeException(e);
         }
@@ -509,7 +509,7 @@ public class Shizuku {
         } catch (RemoteException e) {
             throw rethrowAsRuntimeException(e);
         } catch (SecurityException e) {
-            // Shizuku pre-v11 and permission is not granted
+            // Hypers pre-v11 and permission is not granted
             return -1;
         }
         return serverUid;
@@ -527,7 +527,7 @@ public class Shizuku {
         } catch (RemoteException e) {
             throw rethrowAsRuntimeException(e);
         } catch (SecurityException e) {
-            // Shizuku pre-v11 and permission is not granted
+            // Hypers pre-v11 and permission is not granted
             return -1;
         }
         return serverApiVersion;
@@ -546,18 +546,18 @@ public class Shizuku {
      * Return latest service version when this library was released.
      *
      * @return Latest service version
-     * @see Shizuku#getVersion()
+     * @see Hypers#getVersion()
      */
     public static int getLatestServiceVersion() {
-        return ShizukuApiConstants.SERVER_VERSION;
+        return HypersApiConstants.SERVER_VERSION;
     }
 
     /**
-     * Returns SELinux context of Shizuku server process.
+     * Returns SELinux context of Hypers server process.
      *
      * <p>For adb, context should always be <code>u:r:shell:s0</code>.
      * <br>For root, context depends on su the user uses. E.g., context of Magisk is <code>u:r:magisk:s0</code>.
-     * If the user's su does not allow binder calls between su and app, Shizuku will switch to context <code>u:r:shell:s0</code>.
+     * If the user's su does not allow binder calls between su and app, Hypers will switch to context <code>u:r:shell:s0</code>.
      * </p>
      *
      * @return SELinux context
@@ -570,7 +570,7 @@ public class Shizuku {
         } catch (RemoteException e) {
             throw rethrowAsRuntimeException(e);
         } catch (SecurityException e) {
-            // Shizuku pre-v11 and permission is not granted
+            // Hypers pre-v11 and permission is not granted
             return null;
         }
         return serverContext;
@@ -593,7 +593,7 @@ public class Shizuku {
         /**
          * Daemon controls if the service should be run as daemon mode.
          * <br>Under non-daemon mode, the service will be stopped when the app process is dead.
-         * <br>Under daemon mode, the service will run forever until {@link Shizuku#unbindUserService(UserServiceArgs, ServiceConnection, boolean)} is called.
+         * <br>Under daemon mode, the service will run forever until {@link Hypers#unbindUserService(UserServiceArgs, ServiceConnection, boolean)} is called.
          * <p>For upward compatibility reason, {@code daemon} is {@code true} by default.
          *
          * @param daemon Daemon
@@ -618,7 +618,7 @@ public class Shizuku {
         /**
          * Version code is used to distinguish different services.
          * <p>Use a different version code when the service code is updated, so that
-         * the Shizuku or Sui server can recreate the user service for you.
+         * the Hypers or Sui server can recreate the user service for you.
          *
          * @param versionCode Version code
          */
@@ -665,26 +665,26 @@ public class Shizuku {
 
         private Bundle forAdd() {
             Bundle options = new Bundle();
-            options.putParcelable(ShizukuApiConstants.USER_SERVICE_ARG_COMPONENT, componentName);
-            options.putBoolean(ShizukuApiConstants.USER_SERVICE_ARG_DEBUGGABLE, debuggable);
-            options.putInt(ShizukuApiConstants.USER_SERVICE_ARG_VERSION_CODE, versionCode);
-            options.putBoolean(ShizukuApiConstants.USER_SERVICE_ARG_DAEMON, daemon);
-            options.putBoolean(ShizukuApiConstants.USER_SERVICE_ARG_USE_32_BIT_APP_PROCESS, use32BitAppProcess);
-            options.putString(ShizukuApiConstants.USER_SERVICE_ARG_PROCESS_NAME,
+            options.putParcelable(HypersApiConstants.USER_SERVICE_ARG_COMPONENT, componentName);
+            options.putBoolean(HypersApiConstants.USER_SERVICE_ARG_DEBUGGABLE, debuggable);
+            options.putInt(HypersApiConstants.USER_SERVICE_ARG_VERSION_CODE, versionCode);
+            options.putBoolean(HypersApiConstants.USER_SERVICE_ARG_DAEMON, daemon);
+            options.putBoolean(HypersApiConstants.USER_SERVICE_ARG_USE_32_BIT_APP_PROCESS, use32BitAppProcess);
+            options.putString(HypersApiConstants.USER_SERVICE_ARG_PROCESS_NAME,
                     Objects.requireNonNull(processName, "process name suffix must not be null"));
             if (tag != null) {
-                options.putString(ShizukuApiConstants.USER_SERVICE_ARG_TAG, tag);
+                options.putString(HypersApiConstants.USER_SERVICE_ARG_TAG, tag);
             }
             return options;
         }
 
         private Bundle forRemove(boolean remove) {
             Bundle options = new Bundle();
-            options.putParcelable(ShizukuApiConstants.USER_SERVICE_ARG_COMPONENT, componentName);
+            options.putParcelable(HypersApiConstants.USER_SERVICE_ARG_COMPONENT, componentName);
             if (tag != null) {
-                options.putString(ShizukuApiConstants.USER_SERVICE_ARG_TAG, tag);
+                options.putString(HypersApiConstants.USER_SERVICE_ARG_TAG, tag);
             }
-            options.putBoolean(ShizukuApiConstants.USER_SERVICE_ARG_REMOVE, remove);
+            options.putBoolean(HypersApiConstants.USER_SERVICE_ARG_REMOVE, remove);
             return options;
         }
     }
@@ -693,7 +693,7 @@ public class Shizuku {
      * User Service is similar to <a href="https://developer.android.com/guide/components/bound-services">Bound Services</a>.
      * The difference is that the service runs in a different process and as
      * the identity (Linux UID) of root (UID 0) or shell (UID 2000, if the
-     * backend is Shizuku and user starts Shizuku with adb).
+     * backend is Hypers and user starts Hypers with adb).
      * <p>
      * The user service can run under "Daemon mode".
      * Under "Daemon mode" (default behavior), the service will run forever
@@ -706,9 +706,9 @@ public class Shizuku {
      * In this method, you can do some cleanup jobs and call
      * {@link System#exit(int)} in the end.
      * <p>
-     * If the backend is Shizuku, whether in daemon mode or not, user service
-     * will be killed when Shizuku service is stopped or restarted.
-     * Shizuku sends binder to all Shizuku apps. Therefore, you only need to
+     * If the backend is Hypers, whether in daemon mode or not, user service
+     * will be killed when Hypers service is stopped or restarted.
+     * Hypers sends binder to all Hypers apps. Therefore, you only need to
      * start the user service again.
      * <p>
      * <b>Use Android APIs in user service:</b>
@@ -728,7 +728,7 @@ public class Shizuku {
      * @since Added from version 10
      */
     public static void bindUserService(@NonNull UserServiceArgs args, @NonNull ServiceConnection conn) {
-        ShizukuServiceConnection connection = ShizukuServiceConnections.get(args);
+        HypersServiceConnection connection = HypersServiceConnections.get(args);
         connection.addConnection(conn);
         try {
             requireService().addUserService(connection, args.forAdd());
@@ -738,27 +738,27 @@ public class Shizuku {
     }
 
     /**
-     * Similar to {@link Shizuku#bindUserService(UserServiceArgs, ServiceConnection)},
+     * Similar to {@link Hypers#bindUserService(UserServiceArgs, ServiceConnection)},
      * but does not start user service if it is not running.
      *
      * @return service version if the service is running, -1 if the service is not running.
-     * For Shizuku pre-v13, version is always 0 if service is running.
-     * @see Shizuku#bindUserService(UserServiceArgs, ServiceConnection)
+     * For Hypers pre-v13, version is always 0 if service is running.
+     * @see Hypers#bindUserService(UserServiceArgs, ServiceConnection)
      * @since Added from version 12
      */
     public static int peekUserService(@NonNull UserServiceArgs args, @NonNull ServiceConnection conn) {
-        ShizukuServiceConnection connection = ShizukuServiceConnections.get(args);
+        HypersServiceConnection connection = HypersServiceConnections.get(args);
         connection.addConnection(conn);
         int result;
         try {
             Bundle bundle = args.forAdd();
-            bundle.putBoolean(ShizukuApiConstants.USER_SERVICE_ARG_NO_CREATE, true);
+            bundle.putBoolean(HypersApiConstants.USER_SERVICE_ARG_NO_CREATE, true);
             result = requireService().addUserService(connection, bundle);
         } catch (RemoteException e) {
             throw rethrowAsRuntimeException(e);
         }
 
-        boolean atLeast13 = !Shizuku.isPreV11() && Shizuku.getVersion() >= 13;
+        boolean atLeast13 = !Hypers.isPreV11() && Hypers.getVersion() >= 13;
         if (atLeast13) {
             return result;
         }
@@ -778,7 +778,7 @@ public class Shizuku {
      * or the service will not be killed.
      *
      * @param remove Remove (kill) the remote user service.
-     * @see Shizuku#bindUserService(UserServiceArgs, ServiceConnection)
+     * @see Hypers#bindUserService(UserServiceArgs, ServiceConnection)
      */
     public static void unbindUserService(@NonNull UserServiceArgs args, @Nullable ServiceConnection conn, boolean remove) {
         if (remove) {
@@ -789,22 +789,22 @@ public class Shizuku {
             }
         } else {
             /*
-             * When unbindUserService remove=false is called, although the ShizukuServiceConnection
-             * instance is removed from ShizukuServiceConnections, it still exists (since its a Binder),
+             * When unbindUserService remove=false is called, although the HypersServiceConnection
+             * instance is removed from HypersServiceConnections, it still exists (since its a Binder),
              * and it will still receive "connected" "died" from the service, and then call the callback
              * of its ServiceConnection connections[].
              * This finally leads to the ServiceConnection#onServiceConnected/onServiceDisconnected being
              * called multiple times after bindUserService is called later, which is not expected.
              */
 
-            ShizukuServiceConnection connection = ShizukuServiceConnections.get(args);
+            HypersServiceConnection connection = HypersServiceConnections.get(args);
 
             /*
              * For newer versions of the server, we can just call removeUserService with remove=false.
-             * This will not kill the service, but will remove the ShizukuServiceConnection instance
+             * This will not kill the service, but will remove the HypersServiceConnection instance
              * from the server.
              */
-            if (Shizuku.getVersion() >= 14 || Shizuku.getVersion() == 13 && Shizuku.getServerPatchVersion() >= 4) {
+            if (Hypers.getVersion() >= 14 || Hypers.getVersion() == 13 && Hypers.getServerPatchVersion() >= 4) {
                 try {
                     requireService().removeUserService(connection, args.forRemove(false));
                 } catch (RemoteException e) {
@@ -816,7 +816,7 @@ public class Shizuku {
              * As a solution for older versions of the server, we can clear the connections[] here.
              */
             connection.clearConnections();
-            ShizukuServiceConnections.remove(connection);
+            HypersServiceConnections.remove(connection);
         }
     }
 
