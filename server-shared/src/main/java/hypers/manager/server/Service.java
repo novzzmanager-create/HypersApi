@@ -17,14 +17,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
-import moe.shizuku.server.IRemoteProcess;
-import moe.shizuku.server.IShizukuApplication;
-import moe.shizuku.server.IShizukuService;
-import moe.shizuku.server.IShizukuServiceConnection;
-import hypers.hidden.compat.PermissionManagerApis;
+import com.hypers.server.IRemoteProcess;
+import com.hypers.server.IHypersApplication;
+import com.hypers.server.IHypersService;
+import com.hypers.server.IHypersServiceConnection;
+import rikka.hidden.compat.PermissionManagerApis;
 import hypers.rish.RishConfig;
 import hypers.rish.RishService;
-import hypers.manager.ShizukuApiConstants;
+import hypers.manager.HypersApiConstants;
 import hypers.manager.server.api.RemoteProcessHolder;
 import hypers.manager.server.util.Logger;
 import hypers.manager.server.util.OsUtils;
@@ -33,7 +33,7 @@ import hypers.manager.server.util.UserHandleCompat;
 public abstract class Service<
         UserServiceMgr extends UserServiceManager,
         ClientMgr extends ClientManager<ConfigMgr>,
-        ConfigMgr extends ConfigManager> extends IShizukuService.Stub {
+        ConfigMgr extends ConfigManager> extends IHypersService.Stub {
 
     private final UserServiceMgr userServiceManager;
     private final ConfigMgr configManager;
@@ -43,7 +43,7 @@ public abstract class Service<
     protected static final Logger LOGGER = new Logger("Service");
 
     public Service() {
-        RishConfig.init(ShizukuApiConstants.BINDER_DESCRIPTOR, 30000);
+        RishConfig.init(HypersApiConstants.BINDER_DESCRIPTOR, 30000);
 
         userServiceManager = onCreateUserServiceManager();
         configManager = onCreateConfigManager();
@@ -170,7 +170,7 @@ public abstract class Service<
     @Override
     public final int getVersion() {
         enforceCallingPermission("getVersion");
-        return ShizukuApiConstants.SERVER_VERSION;
+        return HypersApiConstants.SERVER_VERSION;
     }
 
     @Override
@@ -219,14 +219,14 @@ public abstract class Service<
     }
 
     @Override
-    public final int removeUserService(IShizukuServiceConnection conn, Bundle options) {
+    public final int removeUserService(IHypersServiceConnection conn, Bundle options) {
         enforceCallingPermission("removeUserService");
 
         return userServiceManager.removeUserService(conn, options);
     }
 
     @Override
-    public final int addUserService(IShizukuServiceConnection conn, Bundle options) {
+    public final int addUserService(IHypersServiceConnection conn, Bundle options) {
         enforceCallingPermission("addUserService");
 
         int callingUid = Binder.getCallingUid();
@@ -235,7 +235,7 @@ public abstract class Service<
 
         ClientRecord clientRecord = clientManager.findClient(callingUid, callingPid);
         if (clientRecord == null) {
-            callingApiVersion = ShizukuApiConstants.SERVER_VERSION;
+            callingApiVersion = HypersApiConstants.SERVER_VERSION;
         } else {
             callingApiVersion = clientRecord.apiVersion;
         }
@@ -325,18 +325,18 @@ public abstract class Service<
     @CallSuper
     @Override
     public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
-        if (code == ShizukuApiConstants.BINDER_TRANSACTION_transact) {
-            data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
+        if (code == HypersApiConstants.BINDER_TRANSACTION_transact) {
+            data.enforceInterface(HypersApiConstants.BINDER_DESCRIPTOR);
             transactRemote(data, reply, flags);
             return true;
         } else if (code == 14 /* attachApplication <= v12 */) {
-            data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
+            data.enforceInterface(HypersApiConstants.BINDER_DESCRIPTOR);
             IBinder binder = data.readStrongBinder();
             String packageName = data.readString();
             Bundle args = new Bundle();
-            args.putString(ShizukuApiConstants.ATTACH_APPLICATION_PACKAGE_NAME, packageName);
-            args.putInt(ShizukuApiConstants.ATTACH_APPLICATION_API_VERSION, -1);
-            attachApplication(IShizukuApplication.Stub.asInterface(binder), args);
+            args.putString(HypersApiConstants.ATTACH_APPLICATION_PACKAGE_NAME, packageName);
+            args.putInt(HypersApiConstants.ATTACH_APPLICATION_API_VERSION, -1);
+            attachApplication(IHypersApplication.Stub.asInterface(binder), args);
             reply.writeNoException();
             return true;
         } else if (rishService.onTransact(code, data, reply, flags)) {
