@@ -1,7 +1,7 @@
 package com.hypers.server;
 
 import com.hypers.server.IRemoteProcess;
-import com.hypers.server.IShizukuApplication;
+import com.hypers.server.IHypersApplication;
 import com.hypers.server.IHypersServiceConnection;
 
 interface IHypersService {
