@@ -425,7 +425,7 @@ public class Hypers {
     }
 
     @NonNull
-    protected static IHypersService requireService() {
+    public static IHypersService requireService() {
         if (service == null) {
             throw new IllegalStateException("binder haven't been received");
         }
