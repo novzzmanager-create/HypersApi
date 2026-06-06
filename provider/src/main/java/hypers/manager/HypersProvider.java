@@ -72,11 +72,11 @@ public class HypersProvider extends ContentProvider {
 
     public static final String ACTION_BINDER_RECEIVED = "com.hypers.api.action.BINDER_RECEIVED";
 
-    private static final String EXTRA_BINDER = "com.hypers.privileged.api.intent.extra.BINDER";
+    private static final String EXTRA_BINDER = "com.hypers.hm.intent.extra.BINDER";
 
     public static final String PERMISSION = "com.hypers.manager.permission.API_V23";
 
-    public static final String MANAGER_APPLICATION_ID = "com.hypers.privileged.api";
+    public static final String MANAGER_APPLICATION_ID = "com.hypers.hm";
 
     private static boolean enableMultiProcess = false;
 
