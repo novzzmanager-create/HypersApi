@@ -16,6 +16,8 @@ interface IHypersService {
 
     String getSELinuxContext() = 8;
 
+    ServerInfo getServerInfo() = 18;
+
     String getSystemProperty(in String name, in String defaultValue) = 9;
 
     void setSystemProperty(in String name, in String value) = 10;
